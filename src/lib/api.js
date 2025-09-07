@@ -1,20 +1,20 @@
-// Usa lo stesso dominio del sito: chiami direttamente /api/...
-const API_BASE = "https://davveroo.it";
+const API_BASE = 'https://api.davveroo.it';
 
-const join = (p) => `${API_BASE}/${String(p).replace(/^\/+/, '')}`
+const join = (p) => `${API_BASE}/${String(p).replace(/^\/+/, '')}`;
 
-async function handle(r){ if(!r.ok){ const t=await r.text().catch(()=> ''); throw new Error(`HTTP ${r.status} - ${t||r.statusText}`) } return r.json() }
-
-export async function apiGet(path){
-  const r = await fetch(join(path), { cache:'no-store' })
-  return handle(r)
+async function handle(r){
+  if (!r.ok) {
+    const t = await r.text().catch(()=> '');
+    throw new Error(`HTTP ${r.status} - ${t || r.statusText}`);
+  }
+  return r.json();
 }
 
+export async function apiGet(path){ return handle(await fetch(join(path), { cache:'no-store' })); }
 export async function apiPost(path, body, headers = {}){
-  const r = await fetch(join(path), {
+  return handle(await fetch(join(path), {
     method:'POST',
     headers: { 'Content-Type':'application/json', ...headers },
-    body: JSON.stringify(body)
-  })
-  return handle(r)
+    body: JSON.stringify(body),
+  }));
 }
