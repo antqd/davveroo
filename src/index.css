@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body { @apply bg-gray-50 text-gray-900; }
+.container { @apply max-w-5xl mx-auto px-4; }
+.card { @apply bg-white rounded-2xl shadow p-6; }
+.btn { @apply inline-flex items-center rounded-xl px-4 py-2 border border-gray-300 hover:bg-gray-100; }
+.btn-primary { @apply bg-black text-white border border-black hover:opacity-90; }
+.input { @apply border rounded-xl px-3 py-2 w-full; }
+.table { @apply min-w-full text-sm; }
+.th { @apply text-left border-b py-2 pr-4; }
+.td { @apply border-b py-2 pr-4; }
