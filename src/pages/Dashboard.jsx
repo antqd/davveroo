@@ -18,7 +18,7 @@ function TopSellersCard() {
   const [err, setErr] = useState(null);
 
   useEffect(() => {
-    apiGet("/api/top-sellers")
+    apiGet("/top-sellers")
       .then((d) => setData(d))
       .catch((e) => setErr(e.message));
   }, []);
@@ -29,33 +29,6 @@ function TopSellersCard() {
     name: `${i.name} (${i.pct}%)`,
     value: i.value,
   }));
-
-  return (
-    <div className="card mb-6">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-semibold">Top seller {data.month_key}</h2>
-        <span className="text-sm text-gray-500">Totale: {data.total}</span>
-      </div>
-      <div className="h-60">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={chartData}
-              dataKey="value"
-              nameKey="name"
-              outerRadius="90%"
-            >
-              {chartData.map((_, i) => (
-                <Cell key={i} />
-              ))}
-            </Pie>
-            <Tooltip />
-            <Legend />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
-  );
 }
 
 // ---------- Dashboard Agente ----------
