@@ -26,7 +26,6 @@ const COLORS = [
 ];
 
 export default function TopSellersAdmin() {
-  // 1) token: querystring > localStorage
   const [params] = useSearchParams();
   const qsToken = (params.get("token") || "").trim();
   const [token, setToken] = useState(qsToken || getAdminToken());
@@ -36,17 +35,16 @@ export default function TopSellersAdmin() {
   const [err, setErr] = useState(null);
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
 
-  // Se arriva da query, persistilo una volta
   useEffect(() => {
     if (qsToken && qsToken !== getAdminToken()) setAdminToken(qsToken);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qsToken]);
 
-  // fetch iniziale (non serve token per GET pubblica; se un domani la proteggi, aggiungi header qui)
+  // 👇 QUI: path SENZA "/api"
   useEffect(() => {
     setLoading(true);
     setErr(null);
-    apiGet("/api/top-sellers")
+    apiGet("/top-sellers")
       .then((d) => setItems(d.items || []))
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
@@ -70,10 +68,10 @@ export default function TopSellersAdmin() {
     setErr(null);
     try {
       if (!token) throw new Error("Token mancante");
-      // salvo token per le prossime volte
       setAdminToken(token);
+      // 👇 QUI: path SENZA "/api"
       await apiPost(
-        "/api/top-sellers",
+        "/top-sellers",
         { items, month },
         { "x-admin-token": token }
       );
@@ -96,7 +94,6 @@ export default function TopSellersAdmin() {
     setToken("");
   }
 
-  // ===== Gate molto semplice =====
   if (!token) {
     return (
       <div className="max-w-md mx-auto">
