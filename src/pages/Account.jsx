@@ -24,9 +24,9 @@ export default function Account() {
   async function loadAll(id) {
     setLoading(true);
     try {
-      const c = await apiGet(`/api/customers/${id}/credit`);
+      const c = await apiGet(`/customers/${id}/credit`);
       setCredit(c.credit_eur);
-      const r = await apiGet(`/api/customers/${id}/referrals`);
+      const r = await apiGet(`/customers/${id}/referrals`);
       setRefs(r.items || []);
     } catch (e) {
       setErr(e.message);
@@ -44,7 +44,7 @@ export default function Account() {
         friend_full_name: friendName,
         friend_email: friendEmail || null,
       };
-      await apiPost("/api/referrals", body);
+      await apiPost("/referrals", body);
       note(true, "Amico aggiunto! (referral pending)");
       setFriendName("");
       setFriendEmail("");
@@ -56,7 +56,8 @@ export default function Account() {
 
   async function redeem(referralId, method) {
     try {
-      await apiPost(`/api/referrals/${referralId}/redeem`, { method });
+      // TODO: backend non ancora presente; lascia la chiamata commentata o implementa endpoint
+      await apiPost(`/referrals/${referralId}/redeem`, { method });
       note(true, "Richiesta di riscatto inviata");
       loadAll(customerId);
     } catch (e) {

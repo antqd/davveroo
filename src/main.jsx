@@ -13,6 +13,8 @@ import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
 import Account from "./pages/Account";
 import TopSellersAdmin from "./pages/TopSellersAdmin";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import "./index.css";
 
 /** Estrae ?token= da search o dal segmento hash */
@@ -34,7 +36,7 @@ function getUrlToken() {
 
 /** Guard semplice con localStorage + env */
 function TokenGate({ children }) {
-  const required = import.meta.env.VITE_TOP_SELLERS_TOKEN || "davveroo";
+  const required = "Expo2026@@"; // evita env
   const incoming = getUrlToken();
   const cached = localStorage.getItem("ts_token");
 
@@ -58,10 +60,18 @@ function Router() {
       <Routes>
         {/* Layout wrapper */}
         <Route element={<App />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/account" element={<Account />} />
+          {/* Home decide in base ai ruoli: admin/seller -> dashboard, altrimenti account, oppure login */}
+          <Route index element={<HomeRedirect />} />
+          {/* Pubbliche */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Private: seller OR admin */}
+          <Route path="/dashboard" element={<RoleGate allow={["seller", "admin"]}><Dashboard /></RoleGate>} />
+          {/* Private: admin only */}
+          <Route path="/admin" element={<RoleGate allow={["admin"]}><Admin /></RoleGate>} />
+          {/* Private: any authenticated role (customer, seller, admin) */}
+          <Route path="/account" element={<AuthGate><Account /></AuthGate>} />
 
           {/* Protetta via token (?token=...) */}
           <Route
@@ -73,25 +83,45 @@ function Router() {
             }
           />
           {/* Alias stessa pagina */}
-          <Route
-            path="/topsellersadmin"
-            element={
-              <TokenGate>
-                <TopSellersAdmin />
-              </TokenGate>
-            }
-          />
+          <Route path="/topsellersadmin" element={<RoleGate allow={["admin"]}><TopSellersAdmin /></RoleGate>} />
 
           {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<HomeRedirect />} />
         </Route>
       </Routes>
     </HashRouter>
   );
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(
+// Evita doppia createRoot in HMR/dev
+const rootEl = document.getElementById("root");
+if (!rootEl._reactRoot) {
+  rootEl._reactRoot = ReactDOM.createRoot(rootEl);
+}
+rootEl._reactRoot.render(
   <React.StrictMode>
     <Router />
   </React.StrictMode>
 );
+
+// ===== Helpers (placed at bottom to keep file self-contained)
+import { isLoggedIn, hasAnyRole, defaultHome } from './lib/auth'
+
+function HomeRedirect() {
+  const to = defaultHome();
+  return <Navigate to={to} replace />
+}
+
+function AuthGate({ children }) {
+  const loc = useLocation();
+  if (!isLoggedIn()) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
+  return children;
+}
+
+function RoleGate({ allow = [], children }) {
+  const loc = useLocation();
+  if (!isLoggedIn()) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
+  if (!allow.length || hasAnyRole(allow)) return children;
+  // Not authorized: send to their home
+  return <Navigate to={defaultHome()} replace />
+}

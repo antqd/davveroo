@@ -1,6 +1,10 @@
 // src/lib/api.js
-const API_BASE = (import.meta.env?.VITE_API_BASE || "/api").replace(/\/+$/, "");
-const join = (p) => `${API_BASE}/${String(p).replace(/^\/+/, "")}`;
+import { getToken } from './auth';
+
+// Usa sempre il proxy /api (Vite già instrada verso https://api.davveroo.it)
+const API_BASE = 'https://api.davveroo.it/api';
+const _API_BASE = API_BASE.replace(/\/+$/, '');
+const join = (p) => `${_API_BASE}/${String(p).replace(/^\/+/, '')}`;
 
 async function handle(r) {
   if (!r.ok) {
@@ -11,14 +15,30 @@ async function handle(r) {
 }
 
 export async function apiGet(path) {
-  return handle(await fetch(join(path), { cache: "no-store" }));
+  const token = getToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  return handle(await fetch(join(path), { cache: "no-store", headers }));
 }
 export async function apiPost(path, body, headers = {}) {
+  const token = getToken();
+  const auth = token ? { Authorization: `Bearer ${token}` } : {};
   return handle(
     await fetch(join(path), {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...headers },
+      headers: { "Content-Type": "application/json", ...auth, ...headers },
       body: JSON.stringify(body),
     })
   );
+}
+
+// Convenience helpers for auth endpoints
+export const apiAuth = {
+  async login(email, password, selectedRoles = []) {
+    // selectedRoles is for UX; backend should validate actual roles
+    return apiPost('/auth/login', { email, password, roles: selectedRoles });
+  },
+  async register(payload) {
+    // payload: { name, email, password, roles: [] }
+    return apiPost('/auth/register', payload);
+  }
 }
