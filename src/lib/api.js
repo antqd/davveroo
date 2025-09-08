@@ -2,7 +2,7 @@
 import { getToken } from './auth';
 
 // Usa sempre il proxy /api (Vite già instrada verso https://api.davveroo.it)
-const API_BASE = 'https://api.davveroo.it/api';
+const API_BASE = '/api';
 const _API_BASE = API_BASE.replace(/\/+$/, '');
 const join = (p) => `${_API_BASE}/${String(p).replace(/^\/+/, '')}`;
 
