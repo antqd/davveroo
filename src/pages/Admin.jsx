@@ -21,8 +21,8 @@ export default function Admin() {
   const [err, setErr] = useState(null)
 
   useEffect(() => {
-    apiGet('/api/products').then(d => setProducts(d.items || [])).catch(() => {})
-    apiGet('/api/customers').then(d => setCustomers(d.items || [])).catch(() => {})
+    apiGet('/products').then(d => setProducts(d.items || [])).catch(() => {})
+    apiGet('/customers').then(d => setCustomers(d.items || [])).catch(() => {})
   }, [])
 
   function note(ok, text){ ok ? setMsg(text) : setErr(text); setTimeout(()=>{setMsg(null);setErr(null)}, 4000) }
@@ -39,7 +39,7 @@ export default function Admin() {
       const r = await apiPost('/api/customers', body)
       note(true, `Cliente creato (id ${r.id})`)
       setFullName(''); setEmail(''); setAgentId(''); setRegisteredBy('')
-      const d = await apiGet('/api/customers'); setCustomers(d.items || [])
+      const d = await apiGet('/customers'); setCustomers(d.items || [])
     } catch (e) { note(false, e.message) }
   }
 

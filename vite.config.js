@@ -4,5 +4,13 @@ import tailwindcss from "tailwindcss";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: { port: 3000 },
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://api.davveroo.it",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

@@ -8,6 +8,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import TopSellersWidget from "../components/TopSellersWidget";
+
+// ...
 
 // ---------- Widget Top Seller ----------
 function TopSellersCard() {
@@ -62,7 +65,7 @@ export default function Dashboard() {
   const [err, setErr] = useState(null);
 
   useEffect(() => {
-    apiGet("/api/dashboard")
+    apiGet("/dashboard")
       .then((d) => setRows(d.items || []))
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
@@ -116,6 +119,10 @@ export default function Dashboard() {
       <p className="text-sm text-gray-500">
         *Qui l’agente vede clienti, amici aggiunti e credito generato.
       </p>
+      <h2 className="text-xl font-semibold mb-2">Top Sellers del mese</h2>
+      <div className="card mb-6">
+        <TopSellersWidget />
+      </div>
     </div>
   );
 }

@@ -1,115 +1,104 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { apiGet, apiPost } from '../lib/api'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
-const LS_KEY = 'tops_token'
+const COLORS = ['#8884d8','#82ca9d','#ffc658','#ff7f50','#00bcd4','#a1887f','#8bc34a']
 
 export default function TopSellersAdmin() {
-  const [token, setToken] = useState(localStorage.getItem(LS_KEY) || '')
-  const [month, setMonth] = useState(() => {
-    const d = new Date()
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
-  })
-  const [items, setItems] = useState([{ agent_name:'', value:0 }])
-  const [remote, setRemote] = useState(null)
-  const [msg, setMsg] = useState(null)
+  const [params] = useSearchParams()
+  const token = params.get('token') || ''
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
   const [err, setErr] = useState(null)
+  const [month, setMonth] = useState(new Date().toISOString().slice(0,7)) // YYYY-MM
 
   useEffect(() => {
-    apiGet(`/api/top-sellers?month=${month}`).then(d => setRemote(d)).catch(()=>{})
-  }, [month])
+    apiGet('/top-sellers')
+      .then(d => setItems(d.items || []))
+      .catch(e => setErr(e.message))
+      .finally(() => setLoading(false))
+  }, [])
 
-  const total = useMemo(()=> items.reduce((s,i)=> s + Number(i.value||0), 0), [items])
+  const total = useMemo(() => items.reduce((s,i)=>s+Number(i.value||0),0), [items])
 
-  function useToken() {
-    if (token.trim()==='') return false
-    localStorage.setItem(LS_KEY, token.trim())
-    setToken(token.trim())
-    return true
+  function addRow() {
+    setItems(p => [...p, { label: '', value: 0 }])
+  }
+  function update(i, key, val) {
+    const copy = [...items]
+    copy[i] = { ...copy[i], [key]: key==='value' ? Number(val) : val }
+    setItems(copy)
+  }
+  async function save() {
+    setErr(null)
+    try {
+      await apiPost('/top-sellers', { items, month }, { 'x-admin-token': token })
+      alert('Salvato!')
+    } catch (e) {
+      setErr(e.message)
+    }
   }
 
-  function addRow(){ setItems([...items, { agent_name:'', value:0 }]) }
-  function setRow(i, patch){ const next=[...items]; next[i] = {...next[i], ...patch}; setItems(next) }
-  function delRow(i){ setItems(items.filter((_,idx)=> idx!==i)) }
-
-  async function save(e){
-    e.preventDefault()
-    const clean = items
-      .map(x => ({ agent_name: x.agent_name.trim(), value: Number(x.value||0) }))
-      .filter(x => x.agent_name && x.value>0)
-    if (!clean.length) { setErr('Nessun elemento valido'); return }
-    try{
-      const r = await apiPost('/api/top-sellers/set', { month_key: month, items: clean }, { 'x-admin-token': token })
-      setMsg(`Salvato (${r.saved}) per ${r.month_key}`)
-      setErr(null)
-      const d = await apiGet(`/api/top-sellers?month=${month}`); setRemote(d)
-    }catch(e){ setErr(e.message); setMsg(null) }
+  if (!token) {
+    return <div className="card text-red-600">Token mancante. Aggiungi <code>?token=Expo2026@@</code> alla URL.</div>
   }
-
-  const chartData = (remote?.items || []).map(i => ({ name: `${i.name} (${i.pct}%)`, value: i.value }))
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Top Seller – Admin</h1>
+      <h1 className="text-2xl font-bold">Top Sellers – Admin</h1>
 
-      {!token ? (
-        <div className="card">
-          <div className="flex gap-2 items-end">
-            <input className="input" placeholder="Token" value={token} onChange={e=>setToken(e.target.value)} />
-            <button className="btn" onClick={useToken}>Entra</button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">Usa il token condiviso.</p>
+      <div className="card">
+        <div className="flex items-center gap-4 mb-4">
+          <label className="text-sm">Mese</label>
+          <input className="input" type="month" value={month} onChange={e=>setMonth(e.target.value)} />
+          <button className="btn" onClick={addRow}>+ Aggiungi riga</button>
+          <button className="btn primary" onClick={save}>Salva</button>
         </div>
-      ) : (
-        <>
-          {msg && <div className="p-3 rounded bg-green-50 text-green-700">{msg}</div>}
-          {err && <div className="p-3 rounded bg-red-50 text-red-700">{err}</div>}
 
-          <div className="card">
-            <form className="space-y-4" onSubmit={save}>
-              <div className="flex gap-3 items-center">
-                <label className="w-36 text-sm">Mese</label>
-                <input type="month" className="input w-52" value={month} onChange={e=>setMonth(e.target.value)} />
-              </div>
+        {loading && <p>Caricamento…</p>}
+        {err && <p className="text-red-600">{err}</p>}
 
-              <div className="space-y-2">
-                {items.map((row,i)=>(
-                  <div key={i} className="grid grid-cols-12 gap-2">
-                    <input className="input col-span-7" placeholder="Nome agente"
-                      value={row.agent_name} onChange={e=>setRow(i,{agent_name:e.target.value})}/>
-                    <input className="input col-span-3" placeholder="Valore" type="number" min="0"
-                      value={row.value} onChange={e=>setRow(i,{value:e.target.value})}/>
-                    <button type="button" className="btn col-span-2" onClick={()=>delRow(i)}>Rimuovi</button>
-                  </div>
-                ))}
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <button type="button" className="btn" onClick={addRow}>+ Aggiungi</button>
-                  <div>Totale: <b>{total}</b></div>
-                </div>
-              </div>
+        <div className="overflow-auto">
+          <table className="table">
+            <thead>
+              <tr>
+                <th className="th">Voce</th>
+                <th className="th" style={{width:140}}>Valore</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((it, i) => (
+                <tr key={i}>
+                  <td className="td">
+                    <input className="input w-full" value={it.label} onChange={e=>update(i,'label',e.target.value)} />
+                  </td>
+                  <td className="td">
+                    <input className="input w-32" type="number" min="0" value={it.value} onChange={e=>update(i,'value',e.target.value)} />
+                  </td>
+                </tr>
+              ))}
+              {!items.length && <tr><td className="td" colSpan={2}>Nessun dato</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-              <button className="btn" type="submit">Salva mese</button>
-            </form>
-          </div>
-
-          <div className="card">
-            <h2 className="text-lg font-semibold mb-3">Anteprima {remote?.month_key || month}</h2>
-            {remote?.items?.length ? (
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={chartData} dataKey="value" nameKey="name" outerRadius="90%">
-                      {chartData.map((_,i)=>(<Cell key={i} />))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-            </div>
-            ) : (<p className="text-gray-500">Nessun dato per questo mese.</p>)}
-          </div>
-        </>
-      )}
+      <div className="card">
+        <h2 className="font-semibold mb-3">Anteprima (percentuali)</h2>
+        <div style={{width:'100%', height:320}}>
+          <ResponsiveContainer>
+            <PieChart>
+              <Pie data={items} dataKey="value" nameKey="label" innerRadius={60} outerRadius={100} label>
+                {items.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <Tooltip formatter={(v)=>[v, 'Valore']} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <p className="text-sm text-gray-500">Totale: {total}</p>
+      </div>
     </div>
   )
 }
