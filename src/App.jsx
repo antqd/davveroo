@@ -18,6 +18,7 @@ export default function App() {
             <NavLink className={navClasses} to="/dashboard">Dashboard Agente</NavLink>
             <NavLink className={navClasses} to="/admin">Admin</NavLink>
             <NavLink className={navClasses} to="/account">Account Cliente</NavLink>
+            <NavLink className={navClasses} to="/topsellersadmin">Top Sellers admin</NavLink>
             {hasTopSellers && (
               <NavLink className={navClasses} to="/top-sellers-admin">
                 Top Sellers
