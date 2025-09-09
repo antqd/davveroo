@@ -17,14 +17,15 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import "./index.css";
 
+// ===== helpers auth locali
+import { isLoggedIn, hasAnyRole, defaultHome } from "./lib/auth";
+
 /** Estrae ?token= da search o dal segmento hash */
 function getUrlToken() {
-  // prima: query string classica
-  const searchParams = new URL(window.location.href).searchParams;
-  const q = searchParams.get("token");
+  const url = new URL(window.location.href);
+  const q = url.searchParams.get("token");
   if (q) return q;
 
-  // fallback: token passato dopo l'hash (es. #/top-sellers-admin?token=XYZ)
   const hash = window.location.hash || "";
   const idx = hash.indexOf("token=");
   if (idx >= 0) {
@@ -34,46 +35,81 @@ function getUrlToken() {
   return null;
 }
 
-/** Guard semplice con localStorage + env */
+/** Guard semplice con localStorage + token in URL */
 function TokenGate({ children }) {
-  const required = "Expo2026@@"; // evita env
+  const required = "Expo2026@@";
   const incoming = getUrlToken();
   const cached = localStorage.getItem("ts_token");
 
   if (incoming && incoming === required) {
     localStorage.setItem("ts_token", incoming);
   }
+  const ok =
+    (incoming && incoming === required) || (cached && cached === required);
 
-  const ok = (incoming && incoming === required) || (cached && cached === required);
   const { pathname } = useLocation();
-
-  if (!ok) {
-    // torna alla dashboard mantenendo l'intento nel fragment
+  if (!ok)
     return <Navigate to="/dashboard" replace state={{ from: pathname }} />;
-  }
   return children;
+}
+
+function HomeRedirect() {
+  return <Navigate to={defaultHome()} replace />;
+}
+
+function AuthGate({ children }) {
+  const loc = useLocation();
+  if (!isLoggedIn())
+    return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
+  return children;
+}
+
+function RoleGate({ allow = [], children }) {
+  const loc = useLocation();
+  if (!isLoggedIn())
+    return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
+  if (!allow.length || hasAnyRole(allow)) return children;
+  return <Navigate to={defaultHome()} replace />;
 }
 
 function Router() {
   return (
     <HashRouter>
       <Routes>
-        {/* Layout wrapper */}
         <Route element={<App />}>
-          {/* Home decide in base ai ruoli: admin/seller -> dashboard, altrimenti account, oppure login */}
           <Route index element={<HomeRedirect />} />
+
           {/* Pubbliche */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Private: seller OR admin */}
-          <Route path="/dashboard" element={<RoleGate allow={["seller", "admin"]}><Dashboard /></RoleGate>} />
-          {/* Private: admin only */}
-          <Route path="/admin" element={<RoleGate allow={["admin"]}><Admin /></RoleGate>} />
-          {/* Private: any authenticated role (customer, seller, admin) */}
-          <Route path="/account" element={<AuthGate><Account /></AuthGate>} />
+          {/* Private */}
+          <Route
+            path="/dashboard"
+            element={
+              <RoleGate allow={["seller", "admin"]}>
+                <Dashboard />
+              </RoleGate>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RoleGate allow={["admin"]}>
+                <Admin />
+              </RoleGate>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <AuthGate>
+                <Account />
+              </AuthGate>
+            }
+          />
 
-          {/* Protetta via token (?token=...) */}
+          {/* Token-protetta */}
           <Route
             path="/top-sellers-admin"
             element={
@@ -82,8 +118,14 @@ function Router() {
               </TokenGate>
             }
           />
-          {/* Alias stessa pagina */}
-          <Route path="/topsellersadmin" element={<RoleGate allow={["admin"]}><TopSellersAdmin /></RoleGate>} />
+          <Route
+            path="/topsellersadmin"
+            element={
+              <RoleGate allow={["admin"]}>
+                <TopSellersAdmin />
+              </RoleGate>
+            }
+          />
 
           {/* Catch-all */}
           <Route path="*" element={<HomeRedirect />} />
@@ -93,7 +135,7 @@ function Router() {
   );
 }
 
-// Evita doppia createRoot in HMR/dev
+// Evita doppia createRoot in HMR
 const rootEl = document.getElementById("root");
 if (!rootEl._reactRoot) {
   rootEl._reactRoot = ReactDOM.createRoot(rootEl);
@@ -103,25 +145,3 @@ rootEl._reactRoot.render(
     <Router />
   </React.StrictMode>
 );
-
-// ===== Helpers (placed at bottom to keep file self-contained)
-import { isLoggedIn, hasAnyRole, defaultHome } from './lib/auth'
-
-function HomeRedirect() {
-  const to = defaultHome();
-  return <Navigate to={to} replace />
-}
-
-function AuthGate({ children }) {
-  const loc = useLocation();
-  if (!isLoggedIn()) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  return children;
-}
-
-function RoleGate({ allow = [], children }) {
-  const loc = useLocation();
-  if (!isLoggedIn()) return <Navigate to="/login" replace state={{ from: loc.pathname }} />
-  if (!allow.length || hasAnyRole(allow)) return children;
-  // Not authorized: send to their home
-  return <Navigate to={defaultHome()} replace />
-}

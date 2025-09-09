@@ -38,4 +38,4 @@ export const apiAuth = {
   register(payload) {
     return apiPost('auth/register', payload);
   }
-};
+}; 

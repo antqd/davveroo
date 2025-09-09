@@ -36,7 +36,7 @@ export default function Admin() {
         agent_id: agentId ? Number(agentId) : null,
         registered_by_customer_id: registeredBy ? Number(registeredBy) : null
       }
-      const r = await apiPost('/api/customers', body)
+      const r = await apiPost('/customers', body)
       note(true, `Cliente creato (id ${r.id})`)
       setFullName(''); setEmail(''); setAgentId(''); setRegisteredBy('')
       const d = await apiGet('/customers'); setCustomers(d.items || [])
@@ -52,7 +52,7 @@ export default function Admin() {
         status,
         amount: amount ? Number(amount) : null
       }
-      const r = await apiPost('/api/purchases', body)
+      const r = await apiPost('/purchases', body)
       note(true, `Acquisto registrato (id ${r.id})`)
       setCustomerId(''); setProductId(''); setStatus('pending'); setAmount('')
     } catch (e) { note(false, e.message) }
