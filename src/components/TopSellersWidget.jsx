@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import { apiGet } from '../lib/api'
+import { itemsArray } from '../lib/apiUtils'
 
 const COLORS = [
   '#2563eb', '#16a34a', '#f59e0b', '#ef4444', '#a855f7',
@@ -25,7 +26,7 @@ export default function TopSellers() {
     apiGet('/top-sellers')
       .then(d => {
         if (!d || d.ok === false) throw new Error(d?.error || 'server_error')
-        if (alive) setRows(Array.isArray(d.items) ? d.items : [])
+        if (alive) setRows(itemsArray(d))
       })
       .catch(e => alive && setErr(e.message || String(e)))
       .finally(() => alive && setLoad(false))
@@ -34,8 +35,10 @@ export default function TopSellers() {
 
   const { data, total } = useMemo(() => {
     const items = rows.map((r, i) => ({
-      name: r.label || r.agent_name || `#${i+1}`,
-      value: Number(r.value || 0),
+      name: r.label || r.agent_name || r.name || r.agent || `#${i+1}`,
+      value: Number(
+        r.value ?? r.total ?? r.count ?? r.amount ?? r.totale ?? 0
+      ),
       color: COLORS[i % COLORS.length]
     }))
     return {

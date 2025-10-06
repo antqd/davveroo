@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { apiGet, apiPost } from "../lib/api";
+import { itemsArray } from "../lib/apiUtils";
 import {
   PieChart,
   Pie,
@@ -45,7 +46,7 @@ export default function TopSellersAdmin() {
     setLoading(true);
     setErr(null);
     apiGet("/top-sellers")
-      .then((d) => setItems(d.items || []))
+      .then((d) => setItems(itemsArray(d)))
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
   }, []);

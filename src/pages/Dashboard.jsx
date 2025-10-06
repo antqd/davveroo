@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "../lib/api";
+import { itemsArray } from "../lib/apiUtils";
 import TopSellersWidget from "../components/TopSellersWidget";
 
 export default function Dashboard() {
@@ -15,8 +16,7 @@ export default function Dashboard() {
     apiGet("/dashboard")
       .then((d) => {
         if (!alive) return;
-        const items = Array.isArray(d?.items) ? d.items : [];
-        setRows(items);
+        setRows(itemsArray(d));
       })
       .catch((e) => {
         if (!alive) return;

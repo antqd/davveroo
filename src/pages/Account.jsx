@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiGet, apiPost } from "../lib/api";
 import { useToast } from "../components/Toast";
 import { getUser } from "../lib/auth";
+import { itemsArray } from "../lib/apiUtils";
 
 export default function Account() {
   const toast = useToast();
@@ -38,9 +39,15 @@ export default function Account() {
     setLoading(true);
     try {
       const c = await apiGet(`/customers/${idAny}/credit`);
-      setCredit(c.credit_eur);
+      const creditValue =
+        c?.credit_eur ?? c?.credit ?? c?.credito ?? c?.creditEuro ?? null;
+      const numericCredit =
+        typeof creditValue === "number"
+          ? creditValue
+          : Number.parseFloat(creditValue ?? "0");
+      setCredit(Number.isFinite(numericCredit) ? numericCredit : 0);
       const r = await apiGet(`/customers/${idAny}/referrals`);
-      setRefs(r.items || []);
+      setRefs(itemsArray(r));
     } catch (e) {
       toast.error(e.message || "Errore caricamento dati");
     } finally {
@@ -67,6 +74,17 @@ export default function Account() {
     }
   }
 
+  function referralCreditCents(ref) {
+    if (!ref || typeof ref !== "object") return 0;
+    if (ref.promised_credit_cents != null)
+      return Number(ref.promised_credit_cents) || 0;
+    if (ref.promised_credit_eur != null)
+      return Number(ref.promised_credit_eur) * 100 || 0;
+    if (ref.promised_credit != null)
+      return Number(ref.promised_credit) * 100 || 0;
+    return 0;
+  }
+
   // ==== Riscatto dal credito in alto ====
   const unlockedRefs = useMemo(
     () => refs.filter((r) => r.status === "unlocked"),
@@ -74,10 +92,7 @@ export default function Account() {
   );
   const unlockedTotalEur = useMemo(
     () =>
-      unlockedRefs.reduce(
-        (sum, r) => sum + (Number(r.promised_credit_cents) || 0),
-        0
-      ) / 100,
+      unlockedRefs.reduce((sum, r) => sum + referralCreditCents(r), 0) / 100,
     [unlockedRefs]
   );
 
@@ -212,7 +227,7 @@ export default function Account() {
                     ) && <span className="text-slate-500">{r.status}</span>}
                   </td>
                   <td className="td">
-                    {(r.promised_credit_cents / 100).toFixed(2)} €
+                    {(referralCreditCents(r) / 100).toFixed(2)} €
                   </td>
                   <td className="td">
                     {r.status === "unlocked" ? (

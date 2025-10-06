@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { apiGet, apiPost } from "../lib/api";
 import { useToast } from "../components/Toast";
 import { getUser } from "../lib/auth";
+import { itemsArray } from "../lib/apiUtils";
 
 export default function Admin() {
   const toast = useToast();
@@ -41,6 +42,34 @@ export default function Admin() {
   const lookupBtnRef = useRef(null);
 
   // ------- LOAD una volta -------
+  const normalizeCustomer = (c) => ({
+    ...c,
+    full_name:
+      c?.full_name ||
+      c?.fullName ||
+      c?.name ||
+      c?.display_name ||
+      c?.displayName ||
+      "",
+  });
+
+  const normalizeAgent = (a) => ({
+    ...a,
+    display_name:
+      a?.display_name ||
+      a?.displayName ||
+      a?.name ||
+      a?.full_name ||
+      a?.fullName ||
+      a?.email ||
+      "",
+  });
+
+  const normalizeProduct = (p) => ({
+    ...p,
+    name: p?.name || p?.label || p?.title || p?.product_name || "",
+  });
+
   useEffect(() => {
     (async () => {
       try {
@@ -49,9 +78,9 @@ export default function Admin() {
           apiGet("/customers"),
           apiGet("/agents"),
         ]);
-        setProducts(p.items || []);
-        setCustomers(c.items || []);
-        setAgents(a.items || []);
+        setProducts(itemsArray(p).map(normalizeProduct));
+        setCustomers(itemsArray(c).map(normalizeCustomer));
+        setAgents(itemsArray(a).map(normalizeAgent));
       } catch (e) {
         toast.error(e.message || "Errore caricamento dati");
       }
@@ -101,6 +130,7 @@ export default function Admin() {
     try {
       const body = {
         full_name: fullName,
+        name: fullName,
         email: email || null,
         agent_id: agentIdCreate ? Number(agentIdCreate) : null,
         registered_by_customer_id: referrerIdCreate
@@ -115,7 +145,7 @@ export default function Admin() {
       setReferrerIdCreate("");
 
       const d = await apiGet("/customers");
-      setCustomers(d.items || []);
+      setCustomers(itemsArray(d).map(normalizeCustomer));
     } catch (e) {
       toast.error(e.message || "Errore");
     }
@@ -168,7 +198,7 @@ export default function Admin() {
       setNewProdName("");
       setNewProdActive(true);
       const d = await apiGet("/products");
-      setProducts(d.items || []);
+      setProducts(itemsArray(d).map(normalizeProduct));
     } catch (e) {
       toast.error(e.message || "Errore");
     }
