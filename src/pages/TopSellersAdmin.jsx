@@ -97,13 +97,19 @@ export default function TopSellersAdmin() {
 
   if (!token) {
     return (
-      <div className="max-w-md mx-auto">
-        <div className="card">
-          <h1 className="text-xl font-semibold mb-3">Top Sellers – Admin</h1>
-          <p className="text-sm text-gray-600 mb-4">
-            Inserisci il token amministratore per accedere.
+      <div className="mx-auto max-w-md">
+        <div className="card border-slate-200 bg-white p-8">
+          <p className="text-xs uppercase tracking-[0.4em] text-blue-500/80">
+            Accesso protetto
           </p>
-          <form onSubmit={handleLogin} className="space-y-3">
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900">
+            Top Sellers – Admin
+          </h1>
+          <p className="mt-3 text-sm text-slate-600">
+            Inserisci il token amministratore per gestire la classifica mensile
+            dei migliori venditori.
+          </p>
+          <form onSubmit={handleLogin} className="mt-6 space-y-4">
             <input
               name="token"
               type="password"
@@ -112,7 +118,10 @@ export default function TopSellersAdmin() {
               autoFocus
               required
             />
-            <button className="btn primary w-full" type="submit">
+            <button
+              className="btn btn-primary w-full justify-center"
+              type="submit"
+            >
               Entra
             </button>
           </form>
@@ -122,88 +131,143 @@ export default function TopSellersAdmin() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Top Sellers – Admin</h1>
-        <button className="btn" onClick={handleLogout}>
-          Logout
-        </button>
+    <div className="space-y-10">
+      <div className="card border-slate-200 bg-gradient-to-br from-white via-amber-50/40 to-white p-8 shadow-xl shadow-amber-100/40">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-4 text-slate-700">
+            <p className="text-xs uppercase tracking-[0.4em] text-amber-500/80">
+              Top Sellers – Admin
+            </p>
+            <h1 className="text-3xl font-semibold leading-tight text-slate-900 md:text-4xl">
+              Dati leadership mensile
+            </h1>
+            <p className="text-sm text-slate-600 md:text-base">
+              Aggiorna le performance dei migliori venditori, condividi il
+              ranking con il team e monitora il totale dei valori generati.
+            </p>
+            <div className="flex flex-wrap gap-3 text-xs uppercase tracking-[0.3em] text-slate-500">
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+                Voci {items.length}
+              </span>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 shadow-sm">
+                Totale {total || 0}
+              </span>
+            </div>
+          </div>
+          <div className="rounded-3xl border border-amber-100 bg-white/90 px-6 py-6 text-right shadow-inner shadow-amber-100">
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              Mese in lavorazione
+            </p>
+            <p className="mt-3 text-4xl font-semibold text-slate-900 tabular-nums">
+              {month}
+            </p>
+            <div className="mt-5 flex flex-wrap justify-end gap-2">
+              <button className="btn btn-ghost" onClick={handleLogout}>
+                Logout
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-slate-500">
+              Ricorda: il token admin resta salvato localmente per accessi
+              rapidi.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="card">
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <label className="text-sm">Mese</label>
-          <input
-            className="input"
-            type="month"
-            value={month}
-            onChange={(e) => setMonth(e.target.value)}
-          />
-          <button className="btn" onClick={addRow}>
-            + Aggiungi riga
-          </button>
-          <button className="btn primary" onClick={save}>
-            Salva
-          </button>
+      <div className="card overflow-hidden p-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-6 py-5">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Gestione classifica
+            </h2>
+            <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+              Modifica le voci e salva per aggiornare la dashboard pubblica
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              className="input"
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+            />
+            <button className="btn btn-ghost" onClick={addRow}>
+              + Aggiungi riga
+            </button>
+            <button className="btn btn-primary" onClick={save}>
+              Salva
+            </button>
+          </div>
         </div>
-
-        {loading && <p>Caricamento…</p>}
-        {err && <p className="text-red-600 break-all">{err}</p>}
-
-        <div className="overflow-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th className="th">Voce</th>
-                <th className="th" style={{ width: 140 }}>
-                  Valore
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((it, i) => (
-                <tr key={i}>
-                  <td className="td">
-                    <input
-                      className="input w-full"
-                      value={it.label}
-                      onChange={(e) => update(i, "label", e.target.value)}
-                    />
-                  </td>
-                  <td className="td">
-                    <input
-                      className="input w-32"
-                      type="number"
-                      min="0"
-                      value={it.value}
-                      onChange={(e) => update(i, "value", e.target.value)}
-                    />
-                  </td>
-                </tr>
-              ))}
-              {!items.length && (
+        <div className="px-6 pb-6 pt-4">
+          {loading && (
+            <p className="text-sm text-slate-500">Caricamento dei dati…</p>
+          )}
+          {err && (
+            <p className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600 break-all">
+              Errore: {err}
+            </p>
+          )}
+          <div className="mt-4 overflow-auto">
+            <table className="table">
+              <thead>
                 <tr>
-                  <td className="td" colSpan={2}>
-                    Nessun dato
-                  </td>
+                  <th className="th">Voce</th>
+                  <th className="th">Valore</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {items.map((it, i) => (
+                  <tr key={i}>
+                    <td className="td">
+                      <input
+                        className="input w-full"
+                        value={it.label}
+                        onChange={(e) => update(i, "label", e.target.value)}
+                        placeholder="Es. Team Nord"
+                      />
+                    </td>
+                    <td className="td">
+                      <input
+                        className="input w-32"
+                        type="number"
+                        min="0"
+                        value={it.value}
+                        onChange={(e) => update(i, "value", e.target.value)}
+                      />
+                    </td>
+                  </tr>
+                ))}
+                {!items.length && (
+                  <tr>
+                    <td className="td text-center text-slate-500" colSpan={2}>
+                      Nessun dato. Aggiungi almeno una riga per iniziare.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <div className="card">
-        <h2 className="font-semibold mb-3">Anteprima (percentuali)</h2>
-        <div style={{ width: "100%", height: 320 }}>
+      <div className="card p-8">
+        <h2 className="text-xl font-semibold text-slate-900">
+          Anteprima percentuale
+        </h2>
+        <p className="mt-2 text-sm text-slate-600">
+          Visualizza l&apos;impatto di ciascun venditore sul totale corrente.
+        </p>
+        <div className="mt-6 w-full" style={{ height: 340 }}>
           <ResponsiveContainer>
             <PieChart>
               <Pie
                 data={items}
                 dataKey="value"
                 nameKey="label"
-                innerRadius={60}
-                outerRadius={100}
+                innerRadius={70}
+                outerRadius={110}
+                paddingAngle={2}
                 label
               >
                 {items.map((_, i) => (
@@ -212,12 +276,21 @@ export default function TopSellersAdmin() {
               </Pie>
               <Tooltip
                 formatter={(v, n, p) => [v, p?.payload?.label || "Valore"]}
+                contentStyle={{
+                  backgroundColor: "rgba(255,255,255,0.95)",
+                  borderRadius: 16,
+                  border: "1px solid rgba(148,163,184,0.4)",
+                  color: "#0f172a",
+                }}
               />
-              <Legend />
+              <Legend wrapperStyle={{ color: "#475569" }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-sm text-gray-500">Totale: {total}</p>
+        <p className="mt-4 text-sm text-slate-600">
+          Totale valori registrati:{" "}
+          <span className="font-semibold text-slate-900">{total}</span>
+        </p>
       </div>
     </div>
   );

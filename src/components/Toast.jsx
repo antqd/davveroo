@@ -33,16 +33,23 @@ export function ToastProvider({ children }) {
         {toasts.map(t => (
           <div key={t.id}
                className={
-                 "pointer-events-auto flex items-start gap-2 rounded-xl px-4 py-3 shadow-lg " +
-                 (t.type === "success" ? "bg-green-50 text-green-800 border border-green-200" :
-                  t.type === "error"   ? "bg-red-50 text-red-800 border border-red-200" :
-                                         "bg-slate-50 text-slate-800 border border-slate-200")
+                 "pointer-events-auto flex items-start gap-3 rounded-2xl border px-4 py-3 shadow-xl shadow-slate-200/60 bg-white/95 " +
+                 (t.type === "success"
+                   ? "border-emerald-200 text-emerald-700"
+                   : t.type === "error"
+                   ? "border-rose-200 text-rose-700"
+                   : "border-sky-200 text-sky-700")
                }>
-            <span className="mt-0.5">
-              {t.type === "success" ? "✅" : t.type === "error" ? "⚠️" : "ℹ️"}
+            <span className="mt-0.5 text-lg leading-none">
+              {t.type === "success" ? "✨" : t.type === "error" ? "⚠️" : "ℹ️"}
             </span>
             <div className="text-sm">{t.msg}</div>
-            <button onClick={() => remove(t.id)} className="ml-2 text-xs opacity-60 hover:opacity-100">chiudi</button>
+            <button
+              onClick={() => remove(t.id)}
+              className="ml-2 text-xs font-semibold uppercase tracking-wide text-slate-500 transition-opacity hover:text-slate-700"
+            >
+              chiudi
+            </button>
           </div>
         ))}
       </div>
