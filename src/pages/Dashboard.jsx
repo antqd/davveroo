@@ -179,13 +179,9 @@ export default function Dashboard() {
                       <td className="td">{r.registrato_da ?? "-"}</td>
                       <td className="td">{r.agente_in_carica ?? "-"}</td>
                       <td className="td">
-                        {r.prodotti_acquistati ? (
-                          <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs uppercase tracking-wide text-slate-600 shadow-sm">
-                            {r.prodotti_acquistati}
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
+                        {r.prodotti_acquistati && r.prodotti_acquistati.trim()
+                          ? r.prodotti_acquistati
+                          : "-"}
                       </td>
                       <td className="td tabular-nums">
                         {r.amici_aggiunti ?? 0}
