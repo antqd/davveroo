@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { apiAuth } from "../lib/api";
+import { apiAuth, apiBusinesses } from "../lib/api";
 import { setToken, setUser } from "../lib/auth";
 
 export default function Register() {
@@ -13,8 +13,15 @@ export default function Register() {
     seller: false,
     admin: false,
   });
+  const [businessName, setBusinessName] = useState("");
+  const [businessEmail, setBusinessEmail] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [businessDescription, setBusinessDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState(null);
+
+  const wantsSeller = roles.seller;
+  const LOYALTY_ERR_KEY = "davveroo_loyalty_setup_err";
 
   function toggle(r) {
     setRoles((v) => ({ ...v, [r]: !v[r] }));
@@ -28,6 +35,7 @@ export default function Register() {
       const selected = Object.entries(roles)
         .filter(([, v]) => v)
         .map(([k]) => k);
+      const wantsBiz = selected.includes("seller");
       const res = await apiAuth.register({
         name,
         email,
@@ -37,6 +45,38 @@ export default function Register() {
       if (!res?.token || !res?.user) throw new Error("register_failed");
       setToken(res.token);
       setUser(res.user);
+
+      if (wantsBiz && businessName.trim()) {
+        try {
+          await apiBusinesses.save({
+            name: businessName.trim(),
+            contact_email:
+              businessEmail && businessEmail.trim()
+                ? businessEmail.trim()
+                : undefined,
+            contact_phone:
+              businessPhone && businessPhone.trim()
+                ? businessPhone.trim()
+                : undefined,
+            description:
+              businessDescription && businessDescription.trim()
+                ? businessDescription.trim()
+                : undefined,
+          });
+          try {
+            localStorage.removeItem(LOYALTY_ERR_KEY);
+          } catch (_storageErr) {}
+        } catch (bizErr) {
+          console.error("business_setup_failed", bizErr);
+          try {
+            localStorage.setItem(
+              LOYALTY_ERR_KEY,
+              bizErr?.message || "Impossibile configurare l'attività"
+            );
+          } catch (_storageErr) {}
+        }
+      }
+
       const next =
         res.user.roles.includes("admin") || res.user.roles.includes("seller")
           ? "/dashboard"
@@ -144,6 +184,47 @@ export default function Register() {
               </label>
             </div>
           </div>
+          {wantsSeller && (
+            <div className="space-y-4 rounded-3xl border border-blue-100 bg-blue-50/50 p-4 text-sm text-slate-700">
+              <div>
+                <h3 className="text-sm font-semibold text-blue-700">
+                  Dettagli della tua attività
+                </h3>
+                <p className="text-xs text-blue-600/80">
+                  Queste informazioni alimentano la dashboard crediti dedicata
+                  ai tuoi clienti.
+                </p>
+              </div>
+              <input
+                className="input"
+                placeholder="Nome attività"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                required={wantsSeller}
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  className="input"
+                  type="email"
+                  placeholder="Email attività (opzionale)"
+                  value={businessEmail}
+                  onChange={(e) => setBusinessEmail(e.target.value)}
+                />
+                <input
+                  className="input"
+                  placeholder="Telefono attività (opzionale)"
+                  value={businessPhone}
+                  onChange={(e) => setBusinessPhone(e.target.value)}
+                />
+              </div>
+              <textarea
+                className="input min-h-[100px]"
+                placeholder="Descrizione o regole del programma fedeltà (opzionale)"
+                value={businessDescription}
+                onChange={(e) => setBusinessDescription(e.target.value)}
+              />
+            </div>
+          )}
           <button
             className="btn btn-primary w-full justify-center"
             type="submit"

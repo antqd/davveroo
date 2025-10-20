@@ -38,4 +38,42 @@ export const apiAuth = {
   register(payload) {
     return apiPost('auth/register', payload);
   }
-}; 
+};
+
+export const apiBusinesses = {
+  me() {
+    return apiGet('businesses/me');
+  },
+  save(payload) {
+    return apiPost('businesses', payload);
+  },
+  listCustomers(businessId) {
+    return apiGet(`businesses/${businessId}/customers`);
+  },
+  addCustomer(businessId, payload) {
+    return apiPost(`businesses/${businessId}/customers`, payload);
+  },
+  addTransaction(businessId, payload) {
+    return apiPost(`businesses/${businessId}/transactions`, payload);
+  },
+  listTransactions(businessId, params = {}) {
+    const search = new URLSearchParams();
+    if (params.customer_id != null) {
+      search.set('customer_id', params.customer_id);
+    }
+    const suffix = search.toString() ? `?${search.toString()}` : '';
+    return apiGet(`businesses/${businessId}/transactions${suffix}`);
+  },
+  listRewards(businessId) {
+    return apiGet(`businesses/${businessId}/rewards`);
+  },
+  saveReward(businessId, payload) {
+    return apiPost(`businesses/${businessId}/rewards`, payload);
+  },
+  redeemReward(businessId, rewardId, payload) {
+    return apiPost(
+      `businesses/${businessId}/rewards/${rewardId}/redeem`,
+      payload
+    );
+  },
+};

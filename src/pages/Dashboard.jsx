@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiGet } from "../lib/api";
 import { itemsArray } from "../lib/apiUtils";
 import TopSellersWidget from "../components/TopSellersWidget";
+import BusinessLoyaltyPanel from "../components/BusinessLoyaltyPanel";
 
 export default function Dashboard() {
   const [rows, setRows] = useState([]);
@@ -214,6 +215,8 @@ export default function Dashboard() {
         </h2>
         <TopSellersWidget />
       </div>
+
+      <BusinessLoyaltyPanel />
     </div>
   );
 }
