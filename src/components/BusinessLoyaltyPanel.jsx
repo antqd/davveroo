@@ -461,6 +461,34 @@ export default function BusinessLoyaltyPanel() {
         </button>
       </div>
 
+      <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
+        <p className="text-xs uppercase tracking-[0.4em] text-slate-500">
+          Come funziona
+        </p>
+        <ol className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-4">
+          <li className="rounded-2xl border border-white bg-white px-4 py-3 shadow-sm">
+            <span className="font-semibold text-slate-900">1. Anagrafica</span>
+            <br />
+            Inserisci nome e contatti della tua attività.
+          </li>
+          <li className="rounded-2xl border border-white bg-white px-4 py-3 shadow-sm">
+            <span className="font-semibold text-slate-900">2. Clienti</span>
+            <br />
+            Registra i clienti e assegna crediti in cassa.
+          </li>
+          <li className="rounded-2xl border border-white bg-white px-4 py-3 shadow-sm">
+            <span className="font-semibold text-slate-900">3. Premi</span>
+            <br />
+            Definisci le ricompense da sbloccare con i punti.
+          </li>
+          <li className="rounded-2xl border border-white bg-white px-4 py-3 shadow-sm">
+            <span className="font-semibold text-slate-900">4. Storico</span>
+            <br />
+            Tieni traccia dei movimenti e dei riscatti.
+          </li>
+        </ol>
+      </div>
+
       {loading ? (
         <p className="mt-6 text-sm text-slate-500">
           Caricamento dati attività…
@@ -473,11 +501,15 @@ export default function BusinessLoyaltyPanel() {
           >
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-blue-500">
-                  Dettagli attività
+                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-500">
+                  Step 1
+                </span>
+                <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                  Configura l’attività
                 </h3>
                 <p className="text-sm text-slate-600">
-                  Aggiorna le informazioni che appariranno nella dashboard crediti.
+                  Inserisci i dati che i tuoi clienti vedranno nel pannello
+                  fedeltà.
                 </p>
               </div>
               <button
@@ -520,6 +552,21 @@ export default function BusinessLoyaltyPanel() {
 
           {business ? (
             <>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                    Step 2
+                  </span>
+                  <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                    Monitora clienti e crediti
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Usa questi numeri per capire come sta performando il tuo
+                    programma fedeltà.
+                  </p>
+                </div>
+              </div>
+
               <div className="grid gap-4 md:grid-cols-4">
                 <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm">
                   <div className="text-xs uppercase tracking-[0.3em] text-slate-500">
@@ -610,7 +657,7 @@ export default function BusinessLoyaltyPanel() {
                 <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
                     <h3 className="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">
-                      Clienti e crediti
+                      Rubrica clienti
                     </h3>
                     <div className="text-xs text-slate-500">
                       Totale: {customers.length}
@@ -677,6 +724,21 @@ export default function BusinessLoyaltyPanel() {
                       primo per iniziare a raccogliere crediti.
                     </p>
                   )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-500">
+                    Step 3
+                  </span>
+                  <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                    Definisci i premi
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Più sono chiari i premi, più i clienti avranno motivazione a
+                    tornare.
+                  </p>
                 </div>
               </div>
 
@@ -770,6 +832,20 @@ export default function BusinessLoyaltyPanel() {
                       i tuoi clienti a tornare.
                     </p>
                   )}
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                    Step 4
+                  </span>
+                  <h3 className="mt-1 text-lg font-semibold text-slate-900">
+                    Controlla lo storico movimenti
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    Qui trovi tutte le assegnazioni e i riscatti per attività.
+                  </p>
                 </div>
               </div>
 

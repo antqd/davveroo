@@ -11,6 +11,8 @@ export default function Account() {
   const [customerId, setCustomerId] = useState(""); // può essere users.id: il backend mappa
   const [credit, setCredit] = useState(null);
   const [refs, setRefs] = useState([]);
+  const [wallets, setWallets] = useState([]);
+  const [loyaltyRewards, setLoyaltyRewards] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Aggiungi amico
@@ -38,7 +40,11 @@ export default function Account() {
   async function loadAll(idAny) {
     setLoading(true);
     try {
-      const c = await apiGet(`/customers/${idAny}/credit`);
+      const [c, r, loyalty] = await Promise.all([
+        apiGet(`/customers/${idAny}/credit`),
+        apiGet(`/customers/${idAny}/referrals`),
+        apiGet(`/me/business-wallets`),
+      ]);
       const creditValue =
         c?.credit_eur ?? c?.credit ?? c?.credito ?? c?.creditEuro ?? null;
       const numericCredit =
@@ -46,8 +52,10 @@ export default function Account() {
           ? creditValue
           : Number.parseFloat(creditValue ?? "0");
       setCredit(Number.isFinite(numericCredit) ? numericCredit : 0);
-      const r = await apiGet(`/customers/${idAny}/referrals`);
       setRefs(itemsArray(r));
+      const loyaltyPayload = loyalty || {};
+      setWallets(itemsArray(loyaltyPayload.wallets || loyaltyPayload));
+      setLoyaltyRewards(itemsArray(loyaltyPayload.rewards));
     } catch (e) {
       toast.error(e.message || "Errore caricamento dati");
     } finally {
@@ -151,6 +159,17 @@ export default function Account() {
     ? totalReferralValue.toFixed(2)
     : "0.00";
 
+  const rewardsByBusiness = useMemo(() => {
+    const map = new Map();
+    loyaltyRewards.forEach((reward) => {
+      if (!reward || reward.business_id == null) return;
+      const key = Number(reward.business_id);
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(reward);
+    });
+    return map;
+  }, [loyaltyRewards]);
+
   return (
     <div className="space-y-10">
       <div className="card border-slate-200 bg-gradient-to-br from-white via-blue-50/40 to-white p-8 shadow-xl shadow-blue-100/40">
@@ -224,6 +243,131 @@ export default function Account() {
             )}
           </div>
         </div>
+      </div>
+
+      <div className="card border-slate-200 bg-white/80 p-8 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Crediti fedeltà nelle tue attività preferite
+            </h2>
+            <p className="text-sm text-slate-600">
+              Qui trovi i punti accumulati presso ogni attività e i premi che
+              puoi richiedere quando raggiungi la soglia necessaria.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            onClick={reloadData}
+            disabled={loading}
+          >
+            Aggiorna
+          </button>
+        </div>
+        {wallets.length ? (
+          <div className="mt-6 space-y-6">
+            {wallets.map((wallet) => {
+              const bizRewards = rewardsByBusiness.get(wallet.business_id) || [];
+              return (
+                <div
+                  key={wallet.business_id}
+                  className="rounded-3xl border border-slate-200 bg-white/90 p-5 shadow-inner shadow-slate-100"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-slate-900">
+                        {wallet.business_name || "Attività senza nome"}
+                      </h3>
+                      {wallet.business_description && (
+                        <p className="text-sm text-slate-500">
+                          {wallet.business_description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                        Crediti disponibili
+                      </div>
+                      <div className="mt-1 text-3xl font-semibold text-slate-900 tabular-nums">
+                        {wallet.balance_credits}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        Totale maturati: {wallet.total_earned} · Spesi:{" "}
+                        {wallet.total_spent}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-4 grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+                    <div className="space-y-2 text-sm text-slate-600">
+                      <p>
+                        Quando raggiungi la soglia richiesta puoi contattare
+                        l’attività per riscattare il premio che preferisci.
+                      </p>
+                      {(wallet.business_contact_email ||
+                        wallet.business_contact_phone) && (
+                        <p className="text-xs text-slate-500">
+                          Contatti:{" "}
+                          {wallet.business_contact_email && (
+                            <span>{wallet.business_contact_email}</span>
+                          )}
+                          {wallet.business_contact_email &&
+                            wallet.business_contact_phone && (
+                              <span className="mx-2">·</span>
+                            )}
+                          {wallet.business_contact_phone && (
+                            <span>{wallet.business_contact_phone}</span>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                      <div className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                        Premi disponibili
+                      </div>
+                      {bizRewards.length ? (
+                        <ul className="mt-3 space-y-2 text-sm">
+                          {bizRewards.map((reward) => (
+                            <li
+                              key={reward.id}
+                              className="flex items-center justify-between gap-3 rounded-2xl border border-white bg-white px-3 py-2 shadow-sm"
+                            >
+                              <div>
+                                <div className="font-semibold text-slate-800">
+                                  {reward.title}
+                                </div>
+                                {reward.description && (
+                                  <div className="text-xs text-slate-500">
+                                    {reward.description}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-sm font-semibold text-slate-800 tabular-nums">
+                                {reward.cost_credits} crediti
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="mt-3 text-sm text-slate-500">
+                          L’attività non ha ancora pubblicato premi. Continua a
+                          guadagnare crediti: verrai avvisato quando saranno
+                          disponibili novità.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="mt-6 text-sm text-slate-500">
+            Non hai ancora crediti fedeltà presso le attività Davveroo. Chiedi al
+            tuo negozio di fiducia di registrarti per iniziare a collezionare
+            ricompense.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
