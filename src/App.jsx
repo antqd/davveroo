@@ -33,12 +33,12 @@ export default function App() {
 
         <div className="relative z-10 flex min-h-screen flex-col">
           <header className="sticky top-0 z-20 border-b border-white/60 bg-white/80 backdrop-blur-md">
-            <div className="container flex h-20 items-center gap-6">
+            <div className="container flex h-28 items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-2xl font-semibold tracking-wide text-slate-900">
+                <span className="text-5xl font-semibold tracking-wide text-slate-900">
                   Davveroo
                 </span>
-                <span className="text-sm font-medium uppercase tracking-[0.28em] text-blue-500/70">
+                <span className="text-base font-medium uppercase tracking-[0.28em] text-blue-500/70">
                   Referral Excellence Program
                 </span>
               </div>
